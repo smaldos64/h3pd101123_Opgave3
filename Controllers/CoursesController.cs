@@ -32,9 +32,10 @@ namespace Opgave3.Controllers
                 return NotFound();
             }   
 
-            List <Course> CourseList = new List<Course> ();
+            List <Course> CourseList = new List<Course>();
 
-            CourseList = await _context.Courses.Include(s => s.StudentCourses).
+            CourseList = await _context.Courses.
+                Include(s => s.StudentCourses).
                 ThenInclude(s => s.Student).
                 ThenInclude(t => t.Team).
                 Include(s => s.StudentCourses).
@@ -48,21 +49,67 @@ namespace Opgave3.Controllers
         }
 
         // GET: api/Courses/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Course>> GetCourse(int id)
+        [HttpGet("{CourseId}")]
+        public async Task<ActionResult<CourseDTO>> GetCourse(int CourseId)
         {
-          if (_context.Courses == null)
-          {
-              return NotFound();
-          }
-            var course = await _context.Courses.FindAsync(id);
+            if (_context.Courses == null)
+            {
+                    return NotFound();
+            }       
 
-            if (course == null)
+            Course Course_Object = new Course();
+
+            Course_Object = await _context.Courses.
+                      Include(s => s.StudentCourses).
+                      ThenInclude(s => s.Student).
+                      ThenInclude(t => t.Team).
+                      Include(s => s.StudentCourses).
+                      ThenInclude(ch => ch.Character).
+                      FirstOrDefaultAsync(c => c.CourseId == CourseId);
+
+            if (null == Course_Object)
             {
                 return NotFound();
             }
 
-            return course;
+            CourseDTO CourseDTO_Object = new CourseDTO();
+
+            CourseDTO_Object = Course_Object.Adapt<CourseDTO>();
+
+            return Ok(CourseDTO_Object);
+        }
+
+        //[HttpGet("{TeamId}")]
+        [HttpGet]
+        [Route("[action]")]
+        public async Task<ActionResult<CourseDTO>> GetCoursesWithTeamId(int TeamId)
+        {
+            if (_context.Courses == null)
+            {
+                return NotFound();
+            }
+
+            List<Course> CourseList = new List<Course>();
+
+            CourseList = await _context.Courses.
+                        Include(s => s.StudentCourses).
+                        ThenInclude(s => s.Student).
+                        ThenInclude(t => t.Team).
+                        Include(s => s.StudentCourses).
+                        ThenInclude(ch => ch.Character).ToListAsync();
+
+            CourseList = CourseList.Where(c => c.StudentCourses.Any(s => s.Student.TeamId == TeamId)).ToList();
+
+            if (null == CourseList)
+            {
+                return NotFound();
+            }
+
+            List<CourseDTO> CourseDTOList = new List<CourseDTO>();
+
+            CourseDTOList = CourseList.Adapt<CourseDTO[]>().ToList();
+
+            return Ok(CourseDTOList);
         }
 
         // PUT: api/Courses/5

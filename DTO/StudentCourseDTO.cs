@@ -33,7 +33,10 @@ namespace Opgave3.DTO
         public CourseDTOMinusRelations Course { get; set; }
     }
 
-
+    public class StudentCourseDTO : StudentCourseMinusCharacterDTO
+    {
+      public CharacterDTOMinusRelations Character { get; set; }
+    }
 
 
 
